@@ -1,4 +1,4 @@
-(defproject forge "0.1.0-SNAPSHOT"
+(defproject basin "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "https://example.com/FIXME"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -17,6 +17,6 @@
                  [datalevin "0.9.22"]
                  [clj-jgit "1.1.0"]]
   :plugins [[lein-ring "0.12.5"]]
-  :ring {:handler forge.core/app}
+  :ring {:handler basin.core/app}
   :profiles {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring/ring-mock "0.3.2"]]}})

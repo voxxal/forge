@@ -1,4 +1,4 @@
-(ns forge.core
+(ns basin.core
   (:require
    [compojure.core :refer :all]
    [compojure.route :as route]
@@ -7,8 +7,8 @@
    [ring.adapter.jetty :refer [run-jetty]]
    [clj-jgit.porcelain :refer :all]
 
-   [forge.util :as util]
-   [forge.views :as views]))
+   [basin.util :as util]
+   [basin.views :as views]))
 
 (defn create-repo [name]
   (let [dir (util/repo-path name)]
@@ -21,8 +21,12 @@
   (POST "/new" {params :params}
         (let [name (params :name)]
           (create-repo name)
-          (resp/redirect (str "/r/" name) 303)))
-  (GET "/r/:repo" [repo] (views/repo repo))
+          (resp/redirect (str "/" name) 303)))
+  (context "/:repo" [repo]
+           (GET "/" [] (views/repo repo))
+           (GET "/log/:ref" [ref] (views/repo-log repo ref))
+           (GET "/tree/:ref" [ref] (views/repo-tree repo ref))
+           (GET "/tree/:ref/:path{.*}", [ref path] (views/repo-file repo ref path)))
   (route/not-found "Not Found"))
 
 (def app

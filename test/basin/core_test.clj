@@ -1,6 +1,6 @@
-(ns forge.core-test
+(ns basin.core-test
   (:require [clojure.test :refer :all]
-            [forge.core :refer :all]))
+            [basin.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

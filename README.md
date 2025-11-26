@@ -1,4 +1,4 @@
-# forge
+# basin 
 
 FIXME: description
 
@@ -10,7 +10,7 @@ Download from https://example.com/FIXME.
 
 FIXME: explanation
 
-    $ java -jar forge-0.1.0-standalone.jar [args]
+    $ java -jar basin-0.1.0-standalone.jar [args]
 
 ## Options
 
