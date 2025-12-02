@@ -9,7 +9,10 @@
    [garden.core :refer [css]]
 
    [basin.env :refer [env]]
-   [basin.util :as util]))
+   [basin.util :as util])
+  (:import
+   (org.eclipse.jgit.treewalk TreeWalk)
+   (org.eclipse.jgit.lib Constants)))
 
 (def navbar 
   [:nav
@@ -44,24 +47,23 @@
      "repo name")
     (form/submit-button "create repo")]))
 
+
 (defn get-tree
-  ([repo rev-commit] (get-tree {:recursive false} repo rev-commit))
-  ([opts? repo rev-commit] (if rev-commit
-     (let [tree-walk (doto (new-tree-walk repo rev-commit) (.setRecursive (:recursive opts?)))]
-       (loop [files []]
-         (if (.next tree-walk)
-           (recur (conj files (.getPathString tree-walk)))
-           files)))
-     [])))
+  ([tw] (get-tree {:recursive false} tw))
+  ([opts? tw]
+   (let [tw (doto tw (.setRecursive (opts? :recursive)))]
+     (loop [files []]
+       (if (.next tw)
+         (recur (conj files (.getPathString tw)))
+         files)))))
 
 (defn repo [name]
   (with-repo (util/repo-path name)
-    (let [rev-commit (try (get-head-commit repo) (catch Exception e nil))
-          tree (get-tree repo rev-commit)]
+    (let [rev-commit (try (get-head-commit repo) (catch Exception e nil))]
     (layout
      name
      [:h1 name]
-     (if (empty? tree)
+     (if (not rev-commit)
        [:div
         [:p "no commits yet"]
         [:h2 "create a new repository"]
@@ -76,11 +78,14 @@ git push -u origin main")]
         [:pre (str "git remote add origin "(:base_url env) "/r/" name "
 git branch -M main
 git push -u origin main")]]
-       [:div
-        [:a {:href (str "/" name "/log/" (util/default-branch repo))} (util/commit-msg repo rev-commit)]
-        [:h2 "tree"]
-        (for [file tree]
-          [:p file])])))))
+       (let [tree (get-tree (new-tree-walk repo rev-commit))
+             default-branch (util/default-branch repo)]
+         [:div
+          [:a {:href (str "/" name "/log/" default-branch)} (util/commit-msg repo rev-commit)]
+          [:h2 "tree"]
+          (for [file tree]
+            [:div
+             [:a {:href (str "/" name "/tree/" default-branch "/" file)} file]])]))))))
 
 (defn repo-log [name ref]
   (with-repo (util/repo-path name)
@@ -105,15 +110,19 @@ git push -u origin main")]]
     (let [commit (find-rev-commit repo rev-walk ref)
           blob-id (get-blob-id repo commit path)]
       (when blob-id
-        (let [content
+        (let [blob
               (-> repo
                   (.getRepository)
-                  (.open blob-id)
-                  (.getBytes)
-                  (String.)
-                  )]
+                  (.open blob-id))]
           (layout
            (str name " - " path)
            [:h1 name]
            [:h2 path]
-           [:pre content]))))))
+           (if (= (.getType blob) (Constants/OBJ_TREE))
+             (let [default-branch (util/default-branch repo)]
+               [:div
+                (for [file (get-tree (doto (TreeWalk. (.getRepository repo)) (.addTree blob-id)))]
+                  [:div
+                   [:a {:href (str "/" name "/tree/" default-branch "/" path "/" file)} file]])])
+             [:div
+               [:pre (String. (.getBytes blob))]])))))))

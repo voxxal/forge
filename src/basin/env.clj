@@ -3,6 +3,7 @@
    [clojure.java.io :as io]
    [clojure.edn :as edn]
    [clojure.tools.logging :as log]))
+
 (def env
   (try
     (with-open [r (io/reader "env.edn")]

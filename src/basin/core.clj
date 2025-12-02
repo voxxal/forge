@@ -26,7 +26,10 @@
            (GET "/" [] (views/repo repo))
            (GET "/log/:ref" [ref] (views/repo-log repo ref))
            (GET "/tree/:ref" [ref] (views/repo-tree repo ref))
-           (GET "/tree/:ref/:path{.*}", [ref path] (views/repo-file repo ref path)))
+           (GET "/tree/:ref/:path{.*}", [ref path]
+                (if (empty? path)
+                  (resp/redirect (str "/" repo "/tree/" ref)) 
+                  (views/repo-file repo ref path))))
   (route/not-found "Not Found"))
 
 (def app
